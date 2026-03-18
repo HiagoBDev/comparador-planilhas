@@ -1,32 +1,29 @@
-import { HashRouter, Routes, Route, Link } from "react-router-dom"
-
-function Home() {
-  return <div>
-    <h1>
-      teste
-    </h1>
-    <Link to="/comparador">Ir para comparador</Link>
-  </div>;
-}
-
-function Comparador() {
-  return <div>
-    <h1>
-      Comparador
-    </h1>
-    <Link to="/">Ir para home</Link>
-  </div>;
-}
+import { HashRouter, Routes, Route } from "react-router-dom";
+import { HomePage } from "@/presentation/pages/home-page";
+import { ComparisonPage } from "@/presentation/pages/comparison-page";
+import { useThemeStore } from "@/application/store/theme-store";
+import { useEffect } from "react";
 
 function App() {
+  const theme = useThemeStore((s) => s.theme);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [theme]);
+
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/comparador" element={<Comparador />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/comparison/:id" element={<ComparisonPage />} />
       </Routes>
     </HashRouter>
-  )
+  );
 }
 
-export default App
+export default App;
