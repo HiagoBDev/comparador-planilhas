@@ -5,7 +5,7 @@ import path from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/comparar-planilhas/",
+  base: "./",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
