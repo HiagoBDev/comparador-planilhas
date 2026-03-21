@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Spreadsheet Comparator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A frontend-only web application designed to compare multiple spreadsheets (.xlsx, .xls, .csv) and manual CPF entries. It processes data client-side, identifying records that are present across all files, missing in certain documents, or duplicated within individual spreadsheets.
 
-Currently, two official plugins are available:
+## Architecture & Technology Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This application was developed using React (v19) with TypeScript and Vite as the build tool. It follows principles of Clean Architecture to ensure separation of concerns, scalability, and maintainability:
 
-## React Compiler
+- **Domain Layer**: Contains core business rules and entities, such as `Person` and `Comparison`. It strictly defines the data structures and normalization logic (e.g., CPF formatting) without depending on external libraries.
+- **Application Layer**: Encapsulates use cases such as the `comparePeople` algorithm. This layer dictates how the data from various sources is cross-referenced to produce actionable comparison results.
+- **Infrastructure Layer**: Handles external integrations. For instance, the `spreadsheet-reader` relies on the `xlsx` library to parse physical files and convert them into the internal domain format.
+- **Presentation Layer**: The user interface, built with React, React Router for navigation, and TailwindCSS for styling. State management is handled by `zustand`, persisting active comparisons to `localStorage` for continuity across sessions. UI components are structured using `shadcn` concepts and dynamic styling utilities (`clsx`, `tailwind-merge`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Testing is implemented across all layers using `vitest` and `@testing-library/react` to guarantee coverage and accuracy in data parsing and domain logic validation.
 
-## Expanding the ESLint configuration
+## Key Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Multi-Format Support**: Upload and read multiple formats including `.xlsx`, `.xls`, and `.csv`.
+- **Manual Data Input**: Input raw text containing CPFs to be validated and matched against uploaded spreadsheets.
+- **Precision Matching**: Data comparison heavily relies on CPF matching to prevent false positives that can arise from name variations or typos.
+- **Client-Side Processing**: All file parsing, data extraction, and comparison logic happens entirely in the browser, ensuring data privacy. No data is sent to external servers.
+- **Persistent State**: The current working comparison is automatically saved in `localStorage`, preventing data loss on page refresh.
+- **Responsive UI & Theming**: Integrated support for dark and light modes, accessible interface elements, and full mobile responsiveness.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Prerequisites
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Node.js (v18 or higher recommended)
+- `npm` (or `pnpm`/`yarn`)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Installation
+
+1. Clone the repository and navigate to the project directory.
+2. Install the dependencies:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Running the Application
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+To start the development server:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
+```
+
+The application will be accessible at the local URL provided in your terminal output (typically `http://localhost:5173`).
+
+## Usage Guide
+
+1. **Upload Data**: On the home page, select and upload the spreadsheets you wish to compare.
+2. **Manual Input** (Optional): Provide additional CPFs manually in the designated text area.
+3. **Compare**: Submit the data. The application will compute the differences and route you to the comparison results page.
+4. **Analyze Results**: Review the categorized output:
+   - Records present in all sources.
+   - Records missing in one or more sources.
+   - Any duplicate entries found within the same spreadsheet.
+   - Status of manually inserted CPFs (found or not found).
+5. **Start Over**: Simply return to the home page or clear the current context to begin a new comparison.
+
+## Testing
+
+The project uses Vitest for running the test suite. To execute all unit and integration tests:
+
+```bash
+npm run test
 ```
