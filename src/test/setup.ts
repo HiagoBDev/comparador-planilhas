@@ -20,13 +20,19 @@ class ResizeObserverMock {
   unobserve() {}
   disconnect() {}
 }
-window.ResizeObserver = ResizeObserverMock as any
+Object.defineProperty(window, 'ResizeObserver', {
+  writable: true,
+  value: ResizeObserverMock,
+})
 
 if (!window.PointerEvent) {
-  class PointerEvent extends MouseEvent {
+  class PointerEventMock extends MouseEvent {
     constructor(type: string, params: PointerEventInit = {}) {
       super(type, params)
     }
   }
-  window.PointerEvent = PointerEvent as any
+  Object.defineProperty(window, 'PointerEvent', {
+    writable: true,
+    value: PointerEventMock,
+  })
 }
