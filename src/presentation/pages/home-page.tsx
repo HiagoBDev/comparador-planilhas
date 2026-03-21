@@ -15,7 +15,7 @@ export function HomePage() {
           <div className="flex items-center gap-2">
             <div>
               <h2 className="text-2xl font-bold tracking-tight">
-                Suas Comparações
+                Suas Comparações teste cd
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Crie e gerencie comparações de planilhas baseadas em CPF.
