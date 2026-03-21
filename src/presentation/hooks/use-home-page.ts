@@ -12,7 +12,7 @@ export function useHomePage() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const id = createComparison(description);
     navigate(`/comparison/${id}`);
-    toast.success("Comparação criada com sucesso!");
+    toast.success("Comparação criada com sucesso! ");
   };
 
   const handleDelete = async (id: string) => {
