@@ -1,16 +1,10 @@
-import { useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useComparison } from "@/application/hooks/use-comparison";
-import {
-  comparePeople,
-  type ComparisonResult,
-} from "@/application/use-cases/compare-people";
-import { readSpreadsheetFile } from "@/infra/spreadsheet/spreadsheet-reader";
+import { useComparisonPage } from "@/presentation/hooks/use-comparison-page";
 import { Layout } from "@/components/layout";
 import { FileDropzone } from "@/components/file-dropzone";
 import { SpreadsheetList } from "@/components/spreadsheet-list";
 import { ManualCpfForm } from "@/components/manual-cpf-form";
 import { ComparisonResults } from "@/components/comparison-results";
+import { HelpPopover } from "@/components/shared/help-popover";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,56 +21,58 @@ import {
   ListNumbersIcon,
   ChartBarIcon,
   WarningIcon,
-  CircleNotch,
+  CircleNotchIcon,
+  ArrowsClockwiseIcon,
 } from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export function ComparisonPage() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { comparison, addSheet, removeSheet, setCpfs } = useComparison(
-    id ?? ""
-  );
+  const {
+    comparison,
+    navigate,
+    isUploading,
+    uploadError,
+    handleFilesSelected,
+    handleSaveCpfs,
+    resultsState,
+    results,
+    isStale,
+    canCompare,
+    isComparing,
+    handleCompare,
+    removeSheet,
+  } = useComparisonPage();
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [isComparing, setIsComparing] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [results, setResults] = useState<ComparisonResult | null>(null);
+  function renderResultsContent() {
+    if (resultsState === "loading") {
+      return (
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+          <Skeleton className="h-[300px] w-full" />
+        </div>
+      );
+    }
 
-  const handleFilesSelected = useCallback(
-    async (files: File[]) => {
-      setIsUploading(true);
-      setUploadError(null);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (resultsState === "success" && results) {
+      return <ComparisonResults results={results} />;
+    }
 
-      try {
-        for (const file of files) {
-          const data = await readSpreadsheetFile(file);
-          addSheet(data);
-        }
-        toast.success("Planilhas adicionadas com sucesso!");
-      } catch (err) {
-        toast.error("Erro ao ler planilha.");
-        setUploadError(
-          err instanceof Error ? err.message : "Erro ao ler planilha."
-        );
-      } finally {
-        setIsUploading(false);
-      }
-    },
-    [addSheet]
-  );
-
-  const handleCompare = useCallback(async () => {
-    if (!comparison) return;
-    setIsComparing(true);
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    
-    const result = comparePeople(comparison);
-    setResults(result);
-    setIsComparing(false);
-    toast.success("Comparação realizada com sucesso!");
-  }, [comparison]);
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <ChartBarIcon className="mb-3 size-10 text-muted-foreground/40" />
+        <p className="text-sm text-muted-foreground">
+          Nenhuma comparação realizada ainda.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground/70">
+          Clique em "Comparar" para gerar os resultados.
+        </p>
+      </div>
+    );
+  }
 
   if (!comparison) {
     return (
@@ -97,8 +93,6 @@ export function ComparisonPage() {
     );
   }
 
-  const canCompare = comparison.spreadsheets.length >= 1;
-
   return (
     <Layout>
       <div className="mb-6">
@@ -113,10 +107,20 @@ export function ComparisonPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UploadSimpleIcon className="size-4" />
-              Planilhas
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UploadSimpleIcon className="size-4" />
+                Planilhas
+              </CardTitle>
+              <HelpPopover>
+                <div>
+                  Oi, <strong className="text-primary whitespace-nowrap">bonitinha</strong>! Aqui você coloca suas planilhas (.xlsx, .xls,
+                  .csv). Só precisa que elas tenham uma coluna chamada{" "}
+                  <strong>cpf</strong> e outra <strong>nome</strong>. Pode
+                  adicionar quantas quiser, tá?
+                </div>
+              </HelpPopover>
+            </div>
             <CardDescription>
               Faça upload de planilhas com colunas "cpf" e "nome".
             </CardDescription>
@@ -126,11 +130,13 @@ export function ComparisonPage() {
               onFilesSelected={handleFilesSelected}
               isLoading={isUploading}
             />
+
             {uploadError && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
                 {uploadError}
               </div>
             )}
+
             <SpreadsheetList
               spreadsheets={comparison.spreadsheets}
               onRemove={removeSheet}
@@ -140,10 +146,19 @@ export function ComparisonPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ListNumbersIcon className="size-4" />
-              CPFs Manuais
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ListNumbersIcon className="size-4" />
+                CPFs Manuais
+              </CardTitle>
+              <HelpPopover>
+                <div>
+                  Quer procurar alguém em específico, <strong className="text-primary whitespace-nowrap">bonitinha</strong>? Digita os CPFs
+                  aqui, um por linha. A gente vai verificar em quais planilhas
+                  cada um aparece!
+                </div>
+              </HelpPopover>
+            </div>
             <CardDescription>
               Insira CPFs para verificar se estão nas planilhas.
             </CardDescription>
@@ -151,7 +166,7 @@ export function ComparisonPage() {
           <CardContent>
             <ManualCpfForm
               initialCpfs={comparison.manualCpfs}
-              onSave={setCpfs}
+              onSave={handleSaveCpfs}
             />
           </CardContent>
         </Card>
@@ -159,55 +174,116 @@ export function ComparisonPage() {
 
       <Separator className="my-6" />
 
+      {/* Stale data warning */}
+      {isStale && (
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+          <ArrowsClockwiseIcon className="size-5 shrink-0" weight="bold" />
+          <p>
+            Os dados foram alterados desde a última comparação, <strong className="text-primary whitespace-nowrap">bonitinha</strong>.
+            Clique em <strong>Comparar</strong> para atualizar os resultados!
+          </p>
+        </div>
+      )}
+
       <div className="flex justify-center">
         <Button
           size="lg"
           disabled={!canCompare || isComparing}
           onClick={handleCompare}
-          className="gap-2 px-8"
+          className={` cursor-pointer ${
+            isStale ? "animate-pulse" : ""
+          }`}
         >
           {isComparing ? (
-            <CircleNotch className="size-5 animate-spin" data-icon="inline-start" />
+            <CircleNotchIcon
+              className="size-5 animate-spin"
+              data-icon="inline-start"
+            />
           ) : (
-            <ScalesIcon className="size-5" weight="bold" data-icon="inline-start" />
+            <ScalesIcon
+              className="size-5"
+              weight="bold"
+              data-icon="inline-start"
+            />
           )}
-          {isComparing ? "Comparando..." : "Comparar"}
+          {isComparing
+            ? "Comparando..."
+            : isStale
+              ? "Comparar novamente"
+              : "Comparar"}
         </Button>
       </div>
 
-      {results && (
-        <div className="mt-6">
-          <Card>
-            <CardHeader>
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
                 <ChartBarIcon className="size-4" />
                 Resultados
               </CardTitle>
-              <CardDescription>
-                Análise da comparação entre{" "}
-                {comparison.spreadsheets.length} planilha(s)
-                {comparison.manualCpfs.length > 0 &&
-                  ` e ${comparison.manualCpfs.length} CPF(s) manual(is)`}
-                .
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isComparing ? (
-                <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <Skeleton className="h-8 w-24" />
-                    <Skeleton className="h-8 w-24" />
-                    <Skeleton className="h-8 w-24" />
+              <HelpPopover>
+                <div className="space-y-4 text-sm">
+                  <p>
+                    Aqui ficam os resultados da comparação,{" "}
+                    <strong className="text-primary whitespace-nowrap">
+                      bonitinha
+                    </strong>
+                    !
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Badge className="min-w-[90px] justify-center bg-green-500/10 text-green-600">
+                        Presentes
+                      </Badge>
+                      <p className="text-muted-foreground">
+                        Pessoas encontradas em todas as planilhas.
+                      </p>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Badge className="min-w-[90px] justify-center bg-red-500/10 text-red-600">
+                        Ausentes
+                      </Badge>
+                      <p className="text-muted-foreground">
+                        Pessoas que faltam em alguma planilha.
+                      </p>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Badge className="min-w-[90px] justify-center bg-yellow-500/10 text-yellow-600">
+                        Duplicados
+                      </Badge>
+                      <p className="text-muted-foreground">
+                        CPFs repetidos dentro da mesma planilha.
+                      </p>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Badge className="min-w-[90px] justify-center bg-blue-500/10 text-blue-600">
+                        Manuais
+                      </Badge>
+                      <p className="text-muted-foreground">
+                        Status dos CPFs que você digitou.
+                      </p>
+                    </div>
                   </div>
-                  <Skeleton className="h-[300px] w-full" />
                 </div>
-              ) : (
-                <ComparisonResults results={results} />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </HelpPopover>
+            </div>
+            <CardDescription>
+              Análise da comparação entre{" "}
+              {comparison.spreadsheets.length} planilha(s)
+              {comparison.manualCpfs.length > 0 &&
+                ` e ${comparison.manualCpfs.length} CPF(s) manual(is)`}
+              .
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>{renderResultsContent()}</CardContent>
+        </Card>
+      </div>
     </Layout>
   );
 }

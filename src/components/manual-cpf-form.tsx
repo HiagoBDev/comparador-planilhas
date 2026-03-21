@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { normalizeCpf } from "@/domain/entities/person";
-import { FloppyDiskIcon, CircleNotch } from "@phosphor-icons/react";
+import { FloppyDiskIcon, CircleNotchIcon } from "@phosphor-icons/react";
 
 const formSchema = z.object({
   cpfs: z.string().min(1, "Insira pelo menos um CPF"),
@@ -69,7 +69,7 @@ export function ManualCpfForm({ initialCpfs, onSave }: ManualCpfFormProps) {
         disabled={isSubmitting || !isDirty || !isValid}
       >
         {isSubmitting ? (
-          <CircleNotch className="size-3.5 animate-spin" data-icon="inline-start" />
+          <CircleNotchIcon className="size-3.5 animate-spin" data-icon="inline-start" />
         ) : (
           <FloppyDiskIcon className="size-3.5" data-icon="inline-start" />
         )}

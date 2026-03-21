@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusIcon, CircleNotch } from "@phosphor-icons/react";
+import { PlusIcon, CircleNotchIcon } from "@phosphor-icons/react";
 
 const formSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
@@ -51,7 +51,7 @@ export function CreateComparisonDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2">
+        <Button size="lg" className="gap-2 cursor-pointer">
           <PlusIcon className="size-4" weight="bold" data-icon="inline-start" />
           Nova Comparação
         </Button>
@@ -68,7 +68,7 @@ export function CreateComparisonDialog({
             <Label htmlFor="description">Descrição</Label>
             <Input
               id="description"
-              placeholder="Ex: Comparação de beneficiários Março 2026"
+              placeholder="Ex: Comparação do trote solidário 2026.1"
               {...register("description")}
             />
             {errors.description && (
@@ -84,7 +84,7 @@ export function CreateComparisonDialog({
               className="gap-2"
             >
               {isSubmitting ? (
-                <CircleNotch className="size-4 animate-spin" weight="bold" />
+                <CircleNotchIcon className="size-4 animate-spin" weight="bold" />
               ) : null}
               {isSubmitting ? "Criando..." : "Criar"}
             </Button>

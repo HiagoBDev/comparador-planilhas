@@ -15,7 +15,7 @@ import {
   ArrowRightIcon,
   FileXlsIcon,
   CalendarIcon,
-  CircleNotch,
+  CircleNotchIcon,
 } from "@phosphor-icons/react";
 
 interface ComparisonCardProps {
@@ -61,7 +61,7 @@ export function ComparisonCard({ comparison, onDelete }: ComparisonCardProps) {
         <Button
           variant="outline"
           size="sm"
-          className="flex-1 gap-1.5"
+          className="flex-1 gap-1.5 cursor-pointer"
           onClick={() => navigate(`/comparison/${comparison.id}`)}
         >
           Abrir
@@ -73,9 +73,10 @@ export function ComparisonCard({ comparison, onDelete }: ComparisonCardProps) {
           onClick={handleDelete}
           disabled={isDeleting}
           aria-label="Excluir comparação"
+          className="cursor-pointer"
         >
           {isDeleting ? (
-            <CircleNotch className="size-3.5 animate-spin" />
+            <CircleNotchIcon className="size-3.5 animate-spin" />
           ) : (
             <TrashIcon className="size-3.5" />
           )}
