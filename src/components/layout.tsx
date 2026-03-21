@@ -34,7 +34,7 @@ export function Layout({ children }: LayoutProps) {
                 <TableIcon className="size-4" weight="bold" />
               </div>
               <h1 className="text-base font-semibold tracking-tight">
-                Comparador
+                Comparador da <strong className="text-primary">Bonitinha</strong>
               </h1>
             </div>
             <div className="ml-auto">
