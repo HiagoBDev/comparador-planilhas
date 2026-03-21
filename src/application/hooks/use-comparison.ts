@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { useComparisonStore } from "@/application/store/comparison-store";
 import type { SpreadsheetData } from "@/domain/entities/spreadsheet-data";
+import { toast } from "sonner";
 
 export function useComparison(id: string) {
   const comparisons = useComparisonStore((s) => s.comparisons);
@@ -15,22 +16,38 @@ export function useComparison(id: string) {
   );
 
   const addSheet = useCallback(
-    (data: SpreadsheetData) => addSpreadsheet(id, data),
+    async (data: SpreadsheetData) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      addSpreadsheet(id, data);
+      toast.success("Planilha adicionada com sucesso!");
+    },
     [id, addSpreadsheet]
   );
 
   const removeSheet = useCallback(
-    (spreadsheetId: string) => removeSpreadsheet(id, spreadsheetId),
+    async (spreadsheetId: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      removeSpreadsheet(id, spreadsheetId);
+      toast.success("Planilha removida com sucesso!");
+    },
     [id, removeSpreadsheet]
   );
 
   const setCpfs = useCallback(
-    (cpfs: string[]) => setManualCpfs(id, cpfs),
+    async (cpfs: string[]) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setManualCpfs(id, cpfs);
+      toast.success("CPFs adicionados com sucesso!");
+    },
     [id, setManualCpfs]
   );
 
   const remove = useCallback(
-    () => deleteComparison(id),
+    async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      deleteComparison(id);
+      toast.success("Comparação removida com sucesso!");
+    },
     [id, deleteComparison]
   );
 

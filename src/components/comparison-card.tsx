@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Comparison } from "@/domain/entities/comparison";
 import {
@@ -14,15 +15,22 @@ import {
   ArrowRightIcon,
   FileXlsIcon,
   CalendarIcon,
+  CircleNotch,
 } from "@phosphor-icons/react";
 
 interface ComparisonCardProps {
   comparison: Comparison;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void> | void;
 }
 
 export function ComparisonCard({ comparison, onDelete }: ComparisonCardProps) {
   const navigate = useNavigate();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    await onDelete(comparison.id);
+  };
 
   const formattedDate = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -62,10 +70,15 @@ export function ComparisonCard({ comparison, onDelete }: ComparisonCardProps) {
         <Button
           variant="destructive"
           size="icon-sm"
-          onClick={() => onDelete(comparison.id)}
+          onClick={handleDelete}
+          disabled={isDeleting}
           aria-label="Excluir comparação"
         >
-          <TrashIcon className="size-3.5" />
+          {isDeleting ? (
+            <CircleNotch className="size-3.5 animate-spin" />
+          ) : (
+            <TrashIcon className="size-3.5" />
+          )}
         </Button>
       </CardFooter>
     </Card>

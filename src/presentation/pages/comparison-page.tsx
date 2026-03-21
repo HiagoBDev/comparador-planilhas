@@ -6,13 +6,14 @@ import {
   type ComparisonResult,
 } from "@/application/use-cases/compare-people";
 import { readSpreadsheetFile } from "@/infra/spreadsheet/spreadsheet-reader";
-import { Layout } from "@/presentation/components/layout";
-import { FileDropzone } from "@/presentation/components/file-dropzone";
-import { SpreadsheetList } from "@/presentation/components/spreadsheet-list";
-import { ManualCpfForm } from "@/presentation/components/manual-cpf-form";
-import { ComparisonResults } from "@/presentation/components/comparison-results";
+import { Layout } from "@/components/layout";
+import { FileDropzone } from "@/components/file-dropzone";
+import { SpreadsheetList } from "@/components/spreadsheet-list";
+import { ManualCpfForm } from "@/components/manual-cpf-form";
+import { ComparisonResults } from "@/components/comparison-results";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -26,7 +27,9 @@ import {
   ListNumbersIcon,
   ChartBarIcon,
   WarningIcon,
+  CircleNotch,
 } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 export function ComparisonPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +39,7 @@ export function ComparisonPage() {
   );
 
   const [isUploading, setIsUploading] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [results, setResults] = useState<ComparisonResult | null>(null);
 
@@ -43,13 +47,16 @@ export function ComparisonPage() {
     async (files: File[]) => {
       setIsUploading(true);
       setUploadError(null);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       try {
         for (const file of files) {
           const data = await readSpreadsheetFile(file);
           addSheet(data);
         }
+        toast.success("Planilhas adicionadas com sucesso!");
       } catch (err) {
+        toast.error("Erro ao ler planilha.");
         setUploadError(
           err instanceof Error ? err.message : "Erro ao ler planilha."
         );
@@ -60,10 +67,15 @@ export function ComparisonPage() {
     [addSheet]
   );
 
-  const handleCompare = useCallback(() => {
+  const handleCompare = useCallback(async () => {
     if (!comparison) return;
+    setIsComparing(true);
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    
     const result = comparePeople(comparison);
     setResults(result);
+    setIsComparing(false);
+    toast.success("Comparação realizada com sucesso!");
   }, [comparison]);
 
   if (!comparison) {
@@ -147,20 +159,22 @@ export function ComparisonPage() {
 
       <Separator className="my-6" />
 
-      {/* Compare Button */}
       <div className="flex justify-center">
         <Button
           size="lg"
-          disabled={!canCompare}
+          disabled={!canCompare || isComparing}
           onClick={handleCompare}
           className="gap-2 px-8"
         >
-          <ScalesIcon className="size-5" weight="bold" data-icon="inline-start" />
-          Comparar
+          {isComparing ? (
+            <CircleNotch className="size-5 animate-spin" data-icon="inline-start" />
+          ) : (
+            <ScalesIcon className="size-5" weight="bold" data-icon="inline-start" />
+          )}
+          {isComparing ? "Comparando..." : "Comparar"}
         </Button>
       </div>
 
-      {/* Results */}
       {results && (
         <div className="mt-6">
           <Card>
@@ -178,7 +192,18 @@ export function ComparisonPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ComparisonResults results={results} />
+              {isComparing ? (
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                  <Skeleton className="h-[300px] w-full" />
+                </div>
+              ) : (
+                <ComparisonResults results={results} />
+              )}
             </CardContent>
           </Card>
         </div>

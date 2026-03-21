@@ -1,9 +1,10 @@
 import { useComparisonStore } from "@/application/store/comparison-store";
 import { useNavigate } from "react-router-dom";
-import { Layout } from "@/presentation/components/layout";
-import { ComparisonCard } from "@/presentation/components/comparison-card";
-import { CreateComparisonDialog } from "@/presentation/components/create-comparison-dialog";
+import { Layout } from "@/components/layout";
+import { ComparisonCard } from "@/components/comparison-card";
+import { CreateComparisonDialog } from "@/components/create-comparison-dialog";
 import { FileXlsIcon } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 export function HomePage() {
   const comparisons = useComparisonStore((s) => s.comparisons);
@@ -11,9 +12,17 @@ export function HomePage() {
   const deleteComparison = useComparisonStore((s) => s.deleteComparison);
   const navigate = useNavigate();
 
-  const handleCreate = (description: string) => {
+  const handleCreate = async (description: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const id = createComparison(description);
     navigate(`/comparison/${id}`);
+    toast.success("Comparação criada com sucesso!");
+  };
+
+  const handleDelete = async (id: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    deleteComparison(id);
+    toast.success("Comparação removida com sucesso!");
   };
 
   return (
@@ -54,7 +63,7 @@ export function HomePage() {
             <ComparisonCard
               key={comparison.id}
               comparison={comparison}
-              onDelete={deleteComparison}
+              onDelete={handleDelete}
             />
           ))}
         </div>

@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon, CircleNotch } from "@phosphor-icons/react";
 
 const formSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
@@ -23,7 +23,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface CreateComparisonDialogProps {
-  onCreate: (description: string) => void;
+  onCreate: (description: string) => Promise<void> | void;
 }
 
 export function CreateComparisonDialog({
@@ -35,14 +35,15 @@ export function CreateComparisonDialog({
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting, isValid, isDirty },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: { description: "" },
+    mode: "onChange",
   });
 
-  const onSubmit = (data: FormData) => {
-    onCreate(data.description);
+  const onSubmit = async (data: FormData) => {
+    await onCreate(data.description);
     reset();
     setOpen(false);
   };
@@ -77,7 +78,16 @@ export function CreateComparisonDialog({
             )}
           </div>
           <DialogFooter>
-            <Button type="submit">Criar</Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !isDirty || !isValid}
+              className="gap-2"
+            >
+              {isSubmitting ? (
+                <CircleNotch className="size-4 animate-spin" weight="bold" />
+              ) : null}
+              {isSubmitting ? "Criando..." : "Criar"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

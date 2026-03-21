@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { normalizeCpf } from "@/domain/entities/person";
-import { FloppyDiskIcon } from "@phosphor-icons/react";
+import { FloppyDiskIcon, CircleNotch } from "@phosphor-icons/react";
 
 const formSchema = z.object({
   cpfs: z.string().min(1, "Insira pelo menos um CPF"),
@@ -14,29 +14,32 @@ type FormData = z.infer<typeof formSchema>;
 
 interface ManualCpfFormProps {
   initialCpfs: string[];
-  onSave: (cpfs: string[]) => void;
+  onSave: (cpfs: string[]) => Promise<void>;
 }
 
 export function ManualCpfForm({ initialCpfs, onSave }: ManualCpfFormProps) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    reset,
+    formState: { errors, isSubmitting, isValid, isDirty },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       cpfs: initialCpfs.join("\n"),
     },
+    mode: "onChange",
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     const cpfs = data.cpfs
       .split(/[\n,;]+/)
       .map((line) => line.trim())
       .filter(Boolean)
       .map(normalizeCpf);
 
-    onSave(cpfs);
+    await onSave(cpfs);
+    reset({ cpfs: initialCpfs.join("\n") }, { keepValues: true }); // reset dirty state
   };
 
   return (
@@ -58,9 +61,19 @@ export function ManualCpfForm({ initialCpfs, onSave }: ManualCpfFormProps) {
           números.
         </p>
       </div>
-      <Button type="submit" variant="outline" size="sm" className="w-fit gap-1.5">
-        <FloppyDiskIcon className="size-3.5" data-icon="inline-start" />
-        Salvar CPFs
+      <Button
+        type="submit"
+        variant="outline"
+        size="sm"
+        className="w-fit gap-1.5"
+        disabled={isSubmitting || !isDirty || !isValid}
+      >
+        {isSubmitting ? (
+          <CircleNotch className="size-3.5 animate-spin" data-icon="inline-start" />
+        ) : (
+          <FloppyDiskIcon className="size-3.5" data-icon="inline-start" />
+        )}
+        {isSubmitting ? "Salvando..." : "Salvar CPFs"}
       </Button>
     </form>
   );
