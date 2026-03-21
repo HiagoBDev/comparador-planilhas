@@ -15,3 +15,18 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 })
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserverMock as any
+
+if (!window.PointerEvent) {
+  class PointerEvent extends MouseEvent {
+    constructor(type: string, params: PointerEventInit = {}) {
+      super(type, params)
+    }
+  }
+  window.PointerEvent = PointerEvent as any
+}
