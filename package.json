@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "doctor": "react-doctor",
-    "doctor:ci": "react-doctor",
     "lint": "eslint .",
+    "doctor": "react-doctor",
+    "doctor:ci": "react-doctor -y --diff main",
     "test": "vitest run",
+    "build": "vite build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
